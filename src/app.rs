@@ -100,7 +100,7 @@ pub fn long_version(revision_hash: Option<&str>) -> String {
         Some(githash) => format!(" (rev {})", githash),
     };
     // Put everything together.
-    format!("{}{}\n{}", crate_version!(), hash, features.join(" "))
+    format!("{}{} (modified fork for cratesrc.com)\n{}", crate_version!(), hash, features.join(" "))
 }
 
 /// Arg is a light alias for a clap::Arg that is specialized to compile time
@@ -600,9 +600,10 @@ fn arg_path(args: &mut Vec<RGArg>) {
 A file or directory to search. Directories are searched recursively. Paths \
 specified on the command line override glob and ignore rules. \
 ");
-    let arg = RGArg::positional("path", "PATH")
+    let mut arg = RGArg::positional("path", "PATH")
         .help(SHORT).long_help(LONG)
         .multiple();
+    arg.claparg = arg.claparg.validator(no_parent_ref);
     args.push(arg);
 }
 
@@ -1643,4 +1644,14 @@ This overrides the --line-regexp flag.
         .help(SHORT).long_help(LONG)
         .overrides("line-regexp");
     args.push(arg);
+}
+
+fn no_parent_ref(path: String) -> Result<(), String> {
+    for part in path.split("/") {
+        if part.starts_with("..") {
+            return Err(format!("parent references aren't allowed."));
+        }
+    }
+
+    Ok(())
 }
