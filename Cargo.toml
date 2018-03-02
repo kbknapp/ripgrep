@@ -74,5 +74,3 @@ simd-accel = [
   "encoding_rs/simd-accel",
 ]
 
-[profile.release]
-debug = true
